@@ -1,0 +1,82 @@
+uses crt;
+label 1, 2, 3, 4;
+var X1, X2, X10, X20, DeltaX, Q, dQx1, dQx2, Qopt, X1opt, X2opt,
+    DX1opt, DX2opt, ModG, h, Eps:real;
+    A:array[0..5] of real;
+    Step:array[0..500,1..6] of real;
+    i, j, s, ns, N, Control, Control1:integer;
+    P:longint;
+function Y(X1,X2:real):real;
+ begin Y:=A[0]+A[1]*X1+A[2]*X2+A[3]*X1*X2+A[4]*X1*X1+A[5]*X2*X2 end;
+ begin
+ ClrScr;
+ Writeln(' Лабораторна робота N 3');
+ Writeln('     "Оптимізація цільової функції системи градієнтним методом"');
+ Writeln('по курсу "Теорія синтезу і аналізу складних систем"');
+ WriteLn; WriteLn;
+ WriteLn('Знайдіть функцію Q(X1,X2),задав коефіцієнти A0-A5 полінома');
+ WriteLn('Y=A0 + A1*X1 + A2*X2 + A3*X1*X2 + A4*X1^2 + A5*X2^2');
+ for i:=0 to 5 do
+  begin
+   Write('A',i:1,'='); ReadLn(A[i]);
+  end;
+ Write('Вкажіть вид екстремуму (Max: +1/ Min: -1):');  ReadLn(Control);
+ Write('Задайте допустиме відхилення градієнта от 0 - Eps:'); ReadLn(Eps);
+ WriteLn('Задайте величину зміщення точки по координатним осям при визначенні:');
+ Write('Часткових похідних dQ(X1,X2)/dXi:DeltaX ='); ReadLn(DeltaX);
+ WriteLn('Задайте початкові координати робочої точки: ');
+ Write('X10='); ReadLn(X10);
+ Write('X20='); ReadLn(X20);
+3:Write('Задайте коефіцієнт h, що пов’язує переміщення з модулем градієнта:');
+ ReadLn(h);
+4:X1:=X10;   X2:=X20; P:=0; ModG:= 1e9; Q:=1e9;
+ while (ModG > Eps)and(Q<>Y(X1,X2)) do
+  begin
+   Q:=Y(X1,X2);
+   dQx1:=(Y(X1 + DeltaX,X2) - Q)/DeltaX;
+   dQx2:=(Y(X1,X2 + DeltaX) - Q)/DeltaX;
+   ModG:=Sqrt(sqr(dQx1) + sqr(dQx2));
+   if P <= 500
+    then
+     begin
+      Step[p,1]:=X1; Step[p,2]:=X2; Step[p,3]:=Q;
+      Step[p,4]:=dQx1; Step[p,5]:=dQx2; Step[p,6]:=ModG*h;
+     end;
+   Writeln;
+   Writeln('Для робочої точки P с номером ',P:1,' отримано :');
+   WriteLn('X1=',X1:7:4,'; ''X2=',X2:7:4,'; ','Q(X1,X2)=',Q:7:4,';');
+   WriteLn(' dQx1/dx1=',dQx1:7:5,'; dQx1/dx2=',dQx1:7:5,';');
+   WriteLn('Величина модуля градієнта функції Q:Mod(G)=',ModG:6:4,';');
+   WriteLn('Величина кроку H*Mod(G):',h*ModG:6:5,'.');
+   P:=P+1;
+   X1:=X1 + Control*h*dQx1; X2:=X2 + Control*h*dQx2;
+   Readln;
+  end;
+  if ModG <= Eps
+   then
+    begin
+   Writeln;
+   Writeln('Робоча точка P с номером ',P-1:2,' представляє рішення!');
+   WriteLn('X1=',X1:6:3,'; X2=',X2:6:3,';  Q(X1,X2)=',Q:6:4,';');
+   WriteLn('Величина модуля градієнта функції Q:Mod(G)=',ModG:6:4,';');
+   WriteLn('Максимальна можлива абсолютна похибка визначення ');
+   WriteLn('Координат точки екстремуму цільової функції Q складає:');
+   WriteLn('Для координати X1 - ',dQx1*h:7:5,', для координати X2 - ',dQx2*h:7:5);
+   WriteLn(' Витрати на пошук (кількість вичислений функції Q):',p*3:5);
+    X1opt:=(A[2]*A[3]-2*A[1]*A[5])/(4*A[4]*A[5]-A[3]*A[3]);
+    X2opt:=(A[1]*A[3]-2*A[2]*A[4])/(4*A[4]*A[5]-A[3]*A[3]);
+    Qopt:=Y(X1opt,X2opt);
+    Write('Точний розв’язок ( аналітичний ):');
+    WriteLn('X1opt:',X1opt:6:4,'  X2opt:',X2opt:6:4,'  Qopt:',Qopt:7:4,';');
+    WriteLn;
+   Write('Траєкторію пошуку виводити?(1-да/0=нет)'); ReadLn(Control1);
+   if Control1=0 then goto 1;
+  2:WriteLn('Вкажіть номер точки, починаючи з якої ви хочете');
+    Write('Вивести траєкторію пошуку: Number='); ReadLn(ns);
+    Write('Вкажіть кількість точок, що виводиться (<=18) в траєкторії: Steps=');
+    ReadLn(s);
+    for i:=ns to ns+s-1  do
+     WriteLn('Step:',i:2,'  X1=',Step[i,1]:6:3,'  X2=',Step[i,2]:6:3,
+             '  Q=',Step[i,3]:6:3,' dQx1=',Step[i,4]:6:3,
+             '  dQx2=',Step[i,5]:6:3,'  ModG*h=',Step[i,6]:6:3);
+    Write('Виведення результатів продовжити?(1 - так/0 - ні)'); ReadLn(Control1);
